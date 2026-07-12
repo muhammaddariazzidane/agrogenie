@@ -22,7 +22,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
-import Swal from "sweetalert2"; 
+import Swal from "sweetalert2";
 
 // Import config
 import { genAI } from "../config/model";
@@ -186,6 +186,9 @@ export default function VoicePOS() {
         config: { responseMimeType: "application/json", temperature: 0.1 },
       });
 
+      const rawText = response.text || "";
+      if (!rawText) throw new Error("Respons dari model AI kosong.");
+
       const {
         jenis_transaksi,
         nama_barang,
@@ -193,7 +196,7 @@ export default function VoicePOS() {
         satuan,
         pihak_terkait,
         total_harga,
-      } = JSON.parse(response.text);
+      } = JSON.parse(rawText);
 
       const gudangRef = collection(database, "gudang");
       const q = query(
