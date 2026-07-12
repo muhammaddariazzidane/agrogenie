@@ -7,18 +7,25 @@ import {
   Copy,
   Loader2,
 } from "lucide-react";
-import Swal from "sweetalert2"; 
+import Swal from "sweetalert2";
 import { genAI } from "../config/model";
+
+interface GenerativePart {
+  inlineData: {
+    data: string;
+    mimeType: string;
+  };
+}
 
 export default function PromotionAI() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [targetLang, setTargetLang] = useState("ID"); // ID, EN, JA
+  const [targetLang, setTargetLang] = useState("ID"); 
   const [loading, setLoading] = useState(false);
 
   const [aiResult, setAiResult] = useState<any>(null);
 
-  const fileToGenerativePart = (file: File) => {
+  const fileToGenerativePart = (file: File): Promise<GenerativePart> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -68,7 +75,6 @@ export default function PromotionAI() {
       
       ATURAN MUTLAK: Keluarkan HANYA objek JSON yang valid. Jangan berikan kata pengantar atau tanda petik markdown \`\`\`json.`;
 
-      // Eksekusi pemanggilan menggunakan model tercepat dan efisien
       const response = await genAI.models.generateContentStream({
         model: "gemini-2.5-flash",
         contents: [prompt, imagePart],
@@ -80,8 +86,11 @@ export default function PromotionAI() {
 
       let data = "";
       for await (const chunk of response) {
-        data += chunk.text;
+        if (chunk.text) {
+          data += chunk.text;
+        }
       }
+
       const parsedData = JSON.parse(data);
       setAiResult(parsedData);
 
@@ -202,11 +211,9 @@ export default function PromotionAI() {
           </button>
         </div>
 
-        {/* RIGHT CARDS: AI Output Display */}
         <div className="space-y-6 lg:col-span-7 w-full">
           {aiResult ? (
             <>
-              {/* AI Vision Analysis Results */}
               <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm">
                 <div className="flex gap-2.5 items-center mb-4">
                   <div className="p-2 bg-slate-50 rounded-lg text-emerald-600">
@@ -245,7 +252,6 @@ export default function PromotionAI() {
                 </div>
               </div>
 
-              {/* AI Copywriting Box */}
               <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm space-y-4">
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between border-b border-slate-50 pb-3">
                   <div className="flex gap-2.5 items-center">
@@ -257,7 +263,6 @@ export default function PromotionAI() {
                     </h2>
                   </div>
 
-                  {/* Language Selector Tabs */}
                   <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/40 self-start sm:self-auto">
                     {["ID", "EN", "JA"].map((lang) => (
                       <button
